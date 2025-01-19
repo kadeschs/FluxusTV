@@ -15,46 +15,46 @@ class CacheManager extends EventEmitter {
 
     async updateCache(force = false) {
         if (this.cache.updateInProgress) {
-            console.log('⚠️  Aggiornamento cache già in corso, skip...');
+            console.log('⚠️  Cache update already in progress, skip...');
             return;
         }
 
         try {
             this.cache.updateInProgress = true;
-            console.log('\n=== Inizio Aggiornamento Cache ===');
+            console.log('\n=== Start Cache Update ===');
 
             const needsUpdate = force || !this.cache.lastUpdated || 
                 (Date.now() - this.cache.lastUpdated) > this.config.cacheSettings.updateInterval;
 
             if (!needsUpdate) {
-                console.log('ℹ️  Cache ancora valida, skip aggiornamento');
+                console.log('ℹ️  Cache still valid, skip update.');
                 return;
             }
 
-            // Carica e trasforma la playlist
-            console.log('Caricamento playlist da:', this.config.M3U_URL);
+            // Load and transform the playlist
+            console.log('Loading playlist from:', this.config.M3U_URL);
             const stremioData = await this.transformer.loadAndTransform(this.config.M3U_URL);
             
-            // Aggiorna la cache
+            // Refresh the cache
             this.cache = {
                 stremioData,
                 lastUpdated: Date.now(),
                 updateInProgress: false
             };
 
-            // Aggiorna i generi nel manifest
+            // Update the genres in the manifest
             this.config.manifest.catalogs[0].extra[0].options = stremioData.genres;
 
-            console.log('\nRiepilogo Cache:');
-            console.log(`✓ Canali in cache: ${stremioData.channels.length}`);
-            console.log(`✓ Generi trovati: ${stremioData.genres.length}`);
-            console.log(`✓ Ultimo aggiornamento: ${new Date().toLocaleString()}`);
-            console.log('\n=== Cache Aggiornata con Successo ===\n');
+            console.log('\nCache Summary:');
+            console.log(`✓ Cached channels: ${stremioData.channels.length}`);
+            console.log(`✓ Genres found: ${stremioData.genres.length}`);
+            console.log(`✓ Latest update: ${new Date().toLocaleString()}`);
+            console.log('\n=== Cache Updated Successfully ===\n');
 
             this.emit('cacheUpdated', this.cache);
 
         } catch (error) {
-            console.error('\n❌ ERRORE nell\'aggiornamento della cache:', error);
+            console.error('\n❌ ERROR in\'cache update:', error);
             this.cache.updateInProgress = false;
             this.emit('cacheError', error);
             throw error;
@@ -71,18 +71,18 @@ class CacheManager extends EventEmitter {
     }
 
     getChannel(channelId) {
-        console.log('[CacheManager] Ricerca canale con ID:', channelId);
+        console.log('[CacheManager] Channel search with ID:', channelId);
         const channel = this.cache.stremioData?.channels.find(ch => {
             const match = ch.id === `tv|${channelId}`;
             if (match) {
-                console.log('[CacheManager] Trovata corrispondenza per canale:', ch.name);
+                console.log('[CacheManager] Match found by channel:', ch.name);
             }
             return match;
         });
 
         if (!channel) {
-            console.log('[CacheManager] Nessun canale trovato per ID:', channelId);
-            // Prova a cercare per nome se la ricerca per ID fallisce
+            console.log('[CacheManager] No channels found for ID:', channelId);
+            // Try searching by name if searching by ID fails
             return this.cache.stremioData?.channels.find(ch => ch.name === channelId);
         }
 
