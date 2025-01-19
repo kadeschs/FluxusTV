@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: OMG-PLUS
+    runtime: docker  
+    plan: free 
+    region: frankfurt
+    envVars:
+      - key: ENABLE_EPG
+        sync: false
+      - key: FORCE_PROXY
+        sync: false
+      - key: EPG_URL
+        sync: false
+      - key: M3U_URL
+        sync: false
+      - key: PROXY_PASSWORD
+        sync: false
+      - key: PROXY_URL
+        sync: false
