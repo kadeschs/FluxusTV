@@ -1,18 +1,18 @@
-# Usa un'immagine Node.js come base
+# Use a Node.js image as a base
 FROM node:16
 
-# Imposta la directory di lavoro
+# Set the working directory
 WORKDIR /app
 
-# Copia i file del progetto
+# Copy the project files
 COPY package.json package-lock.json ./
 RUN npm install
 
-# Copia il resto del codice
+# Copy the rest of the code
 COPY . .
 
-# Esponi la porta 10000 (usata dal server)
+# Expose port 10000 (used by the server)
 EXPOSE 10000
 
-# Avvia l'add-on
+# Launch the add-on
 CMD ["node", "index.js"]
