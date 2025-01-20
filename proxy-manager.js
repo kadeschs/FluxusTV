@@ -40,7 +40,7 @@ class ProxyManager {
             d: streamUrl
         });
 
-        // Aggiungi l'User-Agent alla richiesta
+        // Add the User-Agent to the request
         if (userAgent) {
             params.append('h_User-Agent', userAgent);
         }
@@ -52,7 +52,7 @@ class ProxyManager {
         const streams = [];
         const userAgent = channel.headers?.['User-Agent'] || 'HbbTV/1.6.1';
 
-        // Se il proxy non è configurato, restituisci un array vuoto
+        // If the proxy is not configured, return an empty array
         if (!this.config.PROXY_URL || !this.config.PROXY_PASSWORD) {
             return streams;
         }
@@ -60,19 +60,19 @@ class ProxyManager {
         try {
             const proxyUrl = this.buildProxyUrl(channel.url, userAgent);
 
-            // Controlla la cache
+            // Check the cache
             const cacheKey = `${channel.name}_${proxyUrl}`;
             const lastCheck = this.lastCheck.get(cacheKey);
-            const cacheValid = lastCheck && (Date.now() - lastCheck) < 5 * 60 * 1000; // 5 minuti di cache
+            const cacheValid = lastCheck && (Date.now() - lastCheck) < 5 * 60 * 1000; // 5 minute cache
 
             if (cacheValid && this.proxyCache.has(cacheKey)) {
                 return [this.proxyCache.get(cacheKey)];
             }
 
-            // Verifica se il proxy è attivo
+            // Check if the proxy is active
             if (!await this.checkProxyHealth(proxyUrl)) {
-                console.log('Proxy non attivo per:', channel.name);
-                return []; // Non aggiungere il flusso di errore
+                console.log('Proxy not active for:', channel.name);
+                return []; // Don't add the error flow
             }
 
             const proxyStream = {
@@ -85,14 +85,14 @@ class ProxyManager {
                 }
             };
 
-            // Aggiorna la cache
+            // Refresh the cache
             this.proxyCache.set(cacheKey, proxyStream);
             this.lastCheck.set(cacheKey, Date.now());
 
             streams.push(proxyStream);
         } catch (error) {
-            console.error('Errore proxy per il canale:', channel.name, error.message);
-            console.error('URL richiesto:', proxyUrl);
+            console.error('Proxy error for channel:', channel.name, error.message);
+            console.error('Requested URL:', proxyUrl);
             console.error('User-Agent:', userAgent);
         }
 
