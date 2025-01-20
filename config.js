@@ -7,8 +7,8 @@ const baseConfig = {
     port: process.env.PORT || 10000,
     
     // Content sources
-    M3U_URL: 'https://raw.githubusercontent.com/kadeschs/OMG-Plus-TV-Stremio-Addon/refs/heads/main/link.playlist',
-    EPG_URL: 'https://raw.githubusercontent.com/kadeschs/OMG-Plus-TV-Stremio-Addon/refs/heads/main/link.epg',
+    M3U_URL: 'https://raw.githubusercontent.com/kadeschs/FluxusTV/refs/heads/main/link.playlist',
+    EPG_URL: 'https://raw.githubusercontent.com/kadeschs/FluxusTV/refs/heads/main/link.epg',
     
     // Feature flags
     enableEPG: true, // EPG active by default
