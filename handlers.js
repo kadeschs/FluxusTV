@@ -4,7 +4,7 @@ const EPGManager = require('./epg-manager');
 const ProxyManager = new (require('./proxy-manager'))(config);
 
 /**
- * Arricchisce i metadati del canale con informazioni EPG
+ * Enriches the channel metadata with EPG information
  */
 function enrichWithEPG(meta, channelId) {
     if (!config.enableEPG) return meta;
@@ -13,22 +13,22 @@ function enrichWithEPG(meta, channelId) {
     const upcomingPrograms = EPGManager.getUpcomingPrograms(channelId);
 
     if (currentProgram) {
-        // Descrizione base del programma corrente
+        // Basic description of the current program
         meta.description = `IN ONDA ORA:\n${currentProgram.title}`;
 
         if (currentProgram.description) {
             meta.description += `\n${currentProgram.description}`;
         }
 
-        // Aggiungi orari
+        // Add times
         meta.description += `\nOrario: ${currentProgram.start} - ${currentProgram.stop}`;
 
-        // Aggiungi la categoria se disponibile
+        // Add category if available
         if (currentProgram.category) {
             meta.description += `\nCategoria: ${currentProgram.category}`;
         }
 
-        // Aggiungi i prossimi programmi
+        // Add upcoming programs
         if (upcomingPrograms && upcomingPrograms.length > 0) {
             meta.description += '\n\nPROSSIMI PROGRAMMI:';
             upcomingPrograms.forEach(program => {
@@ -36,7 +36,7 @@ function enrichWithEPG(meta, channelId) {
             });
         }
 
-        // Informazioni di release
+        // Release information
         meta.releaseInfo = `In onda: ${currentProgram.title}`;
     }
 
@@ -44,11 +44,11 @@ function enrichWithEPG(meta, channelId) {
 }
 
 /**
- * Gestisce le richieste di catalogo
+ * Manages catalog requests
  */
 async function catalogHandler({ type, id, extra }) {
     try {
-        // Aggiorna la cache se necessario
+        // Refresh the cache if necessary
         if (CacheManager.isStale()) {
             await CacheManager.updateCache();
         }
@@ -57,7 +57,7 @@ async function catalogHandler({ type, id, extra }) {
         const { search, genre, skip = 0 } = extra || {};
         const ITEMS_PER_PAGE = 100;
 
-        // Filtraggio canali
+        // Channel filtering
         let channels = [];
         if (genre) {
             channels = cachedData.channels.filter(channel => 
@@ -72,18 +72,18 @@ async function catalogHandler({ type, id, extra }) {
             channels = cachedData.channels;
         }
 
-        // Ordinamento canali
+        // Channel sorting
         channels.sort((a, b) => {
             const numA = parseInt(a.streamInfo?.tvg?.chno) || Number.MAX_SAFE_INTEGER;
             const numB = parseInt(b.streamInfo?.tvg?.chno) || Number.MAX_SAFE_INTEGER;
             return numA - numB || a.name.localeCompare(b.name);
         });
 
-        // Paginazione
+        // Pagination
         const startIdx = parseInt(skip) || 0;
         const paginatedChannels = channels.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
-        // Crea i meta object per ogni canale
+        // Create meta objects for each channel
         const metas = paginatedChannels.map(channel => {
             const meta = {
                 id: channel.id,
@@ -92,7 +92,7 @@ async function catalogHandler({ type, id, extra }) {
                 poster: channel.poster,
                 background: channel.background,
                 logo: channel.logo,
-                description: channel.description || `Canale: ${channel.name}`,
+                description: channel.description || `Channel: ${channel.name}`,
                 genre: channel.genre,
                 posterShape: channel.posterShape || 'square',
                 releaseInfo: 'LIVE',
@@ -102,12 +102,12 @@ async function catalogHandler({ type, id, extra }) {
                 }
             };
 
-            // Aggiungi informazioni del numero del canale se disponibile
+            // Add channel number information if available
             if (channel.streamInfo?.tvg?.chno) {
                 meta.name = `${channel.streamInfo.tvg.chno}. ${channel.name}`;
             }
             
-            // Arricchisci con informazioni EPG
+            // Enrich with EPG information
             return enrichWithEPG(meta, channel.streamInfo?.tvg?.id);
         });
 
@@ -117,13 +117,13 @@ async function catalogHandler({ type, id, extra }) {
         };
 
     } catch (error) {
-        console.error('[Handlers] Errore nella gestione del catalogo:', error);
+        console.error('[Handlers] Error in catalog management:', error);
         return { metas: [], genres: [] };
     }
 }
 
 /**
- * Gestisce le richieste di stream
+ * Handles stream requests
  */
 async function streamHandler({ id }) {
     try {
@@ -136,9 +136,9 @@ async function streamHandler({ id }) {
 
         let streams = [];
 
-        // Gestione degli stream in base alla configurazione del proxy
+        // Stream management based on proxy configuration
         if (config.FORCE_PROXY && config.PROXY_URL && config.PROXY_PASSWORD) {
-            // Solo stream proxy se FORCE_PROXY è attivo
+            // Proxy streams only if FORCE_PROXY is active
             const proxyStreams = await ProxyManager.getProxyStreams({
                 name: channel.name,
                 url: channel.streamInfo.url,
@@ -146,7 +146,7 @@ async function streamHandler({ id }) {
             });
             streams.push(...proxyStreams);
         } else {
-            // Stream diretto
+            // Direct stream
             streams.push({
                 name: channel.name,
                 title: channel.name,
@@ -157,7 +157,7 @@ async function streamHandler({ id }) {
                 }
             });
 
-            // Aggiungi stream proxy se configurato
+            // Add proxy streams if configured
             if (config.PROXY_URL && config.PROXY_PASSWORD) {
                 const proxyStreams = await ProxyManager.getProxyStreams({
                     name: channel.name,
@@ -168,7 +168,7 @@ async function streamHandler({ id }) {
             }
         }
 
-        // Crea i metadati base
+        // Create basic metadata
         const meta = {
             id: channel.id,
             type: 'tv',
@@ -176,7 +176,7 @@ async function streamHandler({ id }) {
             poster: channel.poster,
             background: channel.background,
             logo: channel.logo,
-            description: channel.description || `Canale: ${channel.name}`,
+            description: channel.description || `Channel: ${channel.name}`,
             genre: channel.genre,
             posterShape: channel.posterShape || 'square',
             releaseInfo: 'LIVE',
@@ -186,7 +186,7 @@ async function streamHandler({ id }) {
             }
         };
 
-        // Arricchisci con EPG e aggiungi ai stream
+        // Enrich with EPG and add to streams
         const enrichedMeta = enrichWithEPG(meta, channel.streamInfo?.tvg?.id);
         streams.forEach(stream => {
             stream.meta = enrichedMeta;
@@ -194,16 +194,16 @@ async function streamHandler({ id }) {
 
         return { streams };
     } catch (error) {
-        console.error('[Handlers] Errore nel caricamento dello stream:', error);
+        console.error('[Handlers] Error loading stream:', error);
         return { 
             streams: [{
                 name: 'Errore',
-                title: 'Errore nel caricamento dello stream',
+                title: 'Error loading stream',
                 url: '',
                 behaviorHints: {
                     notWebReady: true,
                     bingeGroup: "tv",
-                    errorMessage: `Errore: ${error.message}`
+                    errorMessage: `Error: ${error.message}`
                 }
             }]
         };
