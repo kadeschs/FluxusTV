@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Configurazione base predefinita
+// Default base configuration
 const baseConfig = {
     // Server configuration
     port: process.env.PORT || 10000,
@@ -11,7 +11,7 @@ const baseConfig = {
     EPG_URL: 'https://raw.githubusercontent.com/kadeschs/OMG-Plus-TV-Stremio-Addon/refs/heads/main/link.epg',
     
     // Feature flags
-    enableEPG: true, // EPG attivo di default
+    enableEPG: true, // EPG active by default
     
     // Proxy configuration
     PROXY_URL: process.env.PROXY_URL || null,
@@ -20,25 +20,25 @@ const baseConfig = {
     
     // Cache settings
     cacheSettings: {
-        updateInterval: 12 * 60 * 60 * 1000, // 12 ore
-        maxAge: 24 * 60 * 60 * 1000, // 24 ore
+        updateInterval: 12 * 60 * 60 * 1000, // 12 hours
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
         retryAttempts: 3,
-        retryDelay: 5000 // 5 secondi
+        retryDelay: 5000 // 5 seconds
     },
     
     // EPG settings
     epgSettings: {
         maxProgramsPerChannel: 50,
-        updateInterval: 12 * 60 * 60 * 1000, // 12 ore
-        cacheExpiry: 24 * 60 * 60 * 1000 // 24 ore
+        updateInterval: 12 * 60 * 60 * 1000, // 12 hours
+        cacheExpiry: 24 * 60 * 60 * 1000 // 24 hours
     },
     
     // Manifest configuration
     manifest: {
-        id: 'org.mccoy88f.omgtv',
-        version: '2.0.0',
-        name: 'OMG TV',
-        description: 'Un add-on per Stremio con playlist di canali M3U predefinita, senza personalizzazione.',
+        id: 'org.kadeschs.fluxustv',
+        version: '1.0.0',
+        name: 'FluxusTV',
+        description: 'An add-on for Stremio with M3U channel playlist.',
         logo: 'https://github.com/mccoy88f/OMG-TV-Stremio-Addon/blob/main/tv.png?raw=true',
         resources: ['stream', 'catalog', 'meta'],
         types: ['tv'],
