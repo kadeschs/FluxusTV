@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: OMG-PLUS
+    name: FluxusTV
     runtime: docker  
     plan: free 
-    region: frankfurt
+    region: USA
     envVars:
       - key: ENABLE_EPG
         sync: false
