@@ -56,7 +56,7 @@ class EPGManager {
             const date = new Date(isoString);
             return isNaN(date.getTime()) ? null : date;
         } catch (error) {
-            console.error('Errore parsing data EPG:', error);
+            console.error('EPG data parsing error:', error);
             return null;
         }
     }
@@ -69,7 +69,7 @@ class EPGManager {
     }
 
     async downloadAndProcessEPG(epgUrl) {
-        console.log('Scaricamento EPG da:', epgUrl.trim());
+        console.log('Download EPG from:', epgUrl.trim());
         try {
             const response = await axios.get(epgUrl.trim(), { 
                 responseType: 'arraybuffer',
@@ -82,14 +82,14 @@ class EPGManager {
 
             let xmlString;
             try {
-                // Prova gzip
+                // Try gzip
                 xmlString = await gunzip(response.data);
             } catch (gzipError) {
                 try {
-                    // Prova zlib
+                    // Try zlib
                     xmlString = zlib.inflateSync(response.data);
                 } catch (zlibError) {
-                    // Se non è compresso, prendi direttamente
+                    // If it is not compressed, take directly
                     xmlString = response.data.toString();
                 }
             }
@@ -97,8 +97,8 @@ class EPGManager {
             const xmlData = await parseStringPromise(xmlString);
             await this.processEPGInChunks(xmlData);
         } catch (error) {
-            console.error(`Errore scaricamento EPG da ${epgUrl}:`, error.message);
-            console.error('Dettagli errore:', {
+            console.error(`Error downloading EPG from ${epgUrl}:`, error.message);
+            console.error('Error details:', {
                 name: error.name,
                 code: error.code,
                 response: error.response?.data
@@ -108,31 +108,31 @@ class EPGManager {
 
     async startEPGUpdate(url) {
         if (this.isUpdating) return;
-        console.log('\n=== Inizio Aggiornamento EPG ===');
+        console.log('\n=== Start of EPG update ===');
         const startTime = Date.now();
 
         try {
             this.isUpdating = true;
             
-            // Supporta URL multipli separati da virgola o da file
+            // Supports multiple URLs separated by comma or file
             const epgUrls = typeof url === 'string' && url.includes(',') 
                 ? url.split(',').map(u => u.trim()) 
                 : await readExternalFile(url);
 
-            // Pulisci la guida programmi esistente
+            // Clean the existing program guide
             this.programGuide.clear();
 
-            // Processa ogni URL EPG in sequenza
+            // Process each EPG URL sequentially
             for (const epgUrl of epgUrls) {
                 await this.downloadAndProcessEPG(epgUrl);
             }
 
             const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-            console.log(`\n✓ Aggiornamento EPG completato in ${duration} secondi`);
-            console.log('=== Fine Aggiornamento EPG ===\n');
+            console.log(`\n✓ EPG update completed in ${duration} seconds`);
+            console.log('=== End of EPG update ===\n');
 
         } catch (error) {
-            console.error('Errore globale EPG:', error);
+            console.error('EPG Global Error:', error);
         } finally {
             this.isUpdating = false;
             this.lastUpdate = Date.now();
@@ -161,7 +161,7 @@ class EPGManager {
                 const programData = {
                     start,
                     stop,
-                    title: programme.title?.[0]?._ || programme.title?.[0]?.$?.text || programme.title?.[0] || 'Nessun titolo',
+                    title: programme.title?.[0]?._ || programme.title?.[0]?.$?.text || programme.title?.[0] || 'No title',
                     description: programme.desc?.[0]?._ || programme.desc?.[0]?.$?.text || programme.desc?.[0] || '',
                     category: programme.category?.[0]?._ || programme.category?.[0]?.$?.text || programme.category?.[0] || ''
                 };
@@ -170,7 +170,7 @@ class EPGManager {
             }
         }
 
-        // Ordina i programmi per ogni canale
+        // Sort programs by each channel
         for (const [channelId, programs] of this.programGuide.entries()) {
             this.programGuide.set(channelId, programs.sort((a, b) => a.start - b.start));
         }
@@ -222,7 +222,7 @@ class EPGManager {
     getStatus() {
         return {
             isUpdating: this.isUpdating,
-            lastUpdate: this.lastUpdate ? this.formatDateIT(new Date(this.lastUpdate)) : 'Mai',
+            lastUpdate: this.lastUpdate ? this.formatDateIT(new Date(this.lastUpdate)) : 'Never',
             channelsCount: this.programGuide.size,
             programsCount: Array.from(this.programGuide.values())
                           .reduce((acc, progs) => acc + progs.length, 0),
@@ -231,22 +231,22 @@ class EPGManager {
     }
 }
 
-// Funzione per leggere un file esterno (playlist o EPG)
+// Function to read an external file (playlist or EPG)
 async function readExternalFile(url) {
     try {
         const response = await axios.get(url);
         const content = response.data;
 
-        // Verifica se il contenuto è un elenco di URL
+        // Checks whether the content is a list of URLs
         if (content.includes('http')) {
             return content.split('\n')
                 .filter(line => line.trim() !== '' && line.startsWith('http'));
         }
 
-        // Se non è un elenco di URL, restituisci l'URL originale
+        // If not a list of URLs, return the original URL
         return [url];
     } catch (error) {
-        console.error('Errore nel leggere il file esterno:', error);
+        console.error('Error reading external file:', error);
         throw error;
     }
 }
