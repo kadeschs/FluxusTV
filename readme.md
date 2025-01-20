@@ -2,7 +2,7 @@
 
 ## 📦 Installation
 
-### Deploy on Render.com
+### Deploy on [Render.com](https://render.com/)
 1. Link the repository to Render.
 2. Configure optional environment variables (optional).
 3. Automatic deployment via button below (it is necessary to have a free account on Render.com).
