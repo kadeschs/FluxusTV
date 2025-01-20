@@ -46,8 +46,8 @@ const baseConfig = {
         catalogs: [
             {
                 type: 'tv',
-                id: 'omg_tv',
-                name: 'OMG TV', // May want to change this to FluxusTV
+                id: 'fluxus_tv',
+                name: 'FluxusTV', // May want to change this to FluxusTV
                 extra: [
                     {
                         name: 'genre',
