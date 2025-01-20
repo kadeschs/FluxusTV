@@ -3,8 +3,8 @@
 ## 📦 Installation
 
 ### Deploy on [Render.com](https://render.com/)
-1. Link the repository to Render.
-2. Configure optional environment variables (optional).
+1. Link repository to Render.
+2. Configure optional environment variables.
 3. Automatic deployment via button below (needs free account).
 
 ⚠️ Render.com has a timer that puts the server on standby if not used, then slowing down the restart; use [Uptime Robot](https://uptimerobot.com/) to fix the problem.
