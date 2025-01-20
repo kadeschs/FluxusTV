@@ -9,7 +9,7 @@ class PlaylistTransformer {
     }
 
     /**
-     * Estrae gli headers dalle opzioni VLC
+     * Extracts headers from VLC options
      */
     parseVLCOpts(lines, currentIndex) {
         const headers = {};
@@ -27,20 +27,20 @@ class PlaylistTransformer {
     }
 
     /**
-     * Converte un canale nel formato Stremio
+     * Converts a channel to Stremio format
      */
     transformChannelToStremio(channel) {
-        // Usa tvg-id se disponibile, altrimenti genera un ID dal nome del canale
+        // Use tvg-id if available, otherwise generate an ID from the channel name
         const channelId = channel.tvg?.id || channel.name.trim();
         const id = `tv|${channelId}`;
         
-        // Usa tvg-name se disponibile, altrimenti usa il nome originale
+        // Use tvg-name if available, otherwise use the original name
         const name = channel.tvg?.name || channel.name;
         
-        // Usa il gruppo se disponibile, altrimenti usa "Altri canali"
-        const group = channel.group || "Altri canali";
+        // Use the group if available, otherwise use "Other channels"
+        const group = channel.group || "Other channels";
         
-        // Aggiungi il genere alla lista dei generi
+        // Add the genre to the genre list
         this.stremioData.genres.add(group);
 
         const transformedChannel = {
@@ -52,7 +52,7 @@ class PlaylistTransformer {
             poster: channel.tvg?.logo,
             background: channel.tvg?.logo,
             logo: channel.tvg?.logo,
-            description: `Canale: ${name}`,
+            description: `Channel: ${name}`,
             runtime: 'LIVE',
             behaviorHints: {
                 defaultVideoId: id,
@@ -73,27 +73,27 @@ class PlaylistTransformer {
     }
 
     /**
-     * Parsa una playlist M3U
+     * Parse M3U playlist
      */
     parseM3U(content) {
-        console.log('\n=== Inizio Parsing Playlist M3U ===');
+        console.log('\n=== Start Parsing Playlist M3U ===');
         const lines = content.split('\n');
         let currentChannel = null;
         
-        // Reset dei dati
+        // Data reset
         this.stremioData.genres.clear();
         this.stremioData.channels = [];
 
-        // Aggiungi "Altri canali" manualmente al Set dei generi
-        this.stremioData.genres.add("Altri canali");
+        // Add "Other Channels" manually to the Genre Set
+        this.stremioData.genres.add("Other channels");
         
-        // Estrai l'URL dell'EPG dall'header della playlist
+        // Extract the EPG URL from the playlist header
         let epgUrl = null;
         if (lines[0].includes('url-tvg=')) {
             const match = lines[0].match(/url-tvg="([^"]+)"/);
             if (match) {
                 epgUrl = match[1];
-                console.log('EPG URL trovato nella playlist:', epgUrl);
+                console.log('EPG URL found in playlist:', epgUrl);
             }
         }
 
@@ -101,11 +101,11 @@ class PlaylistTransformer {
             const line = lines[i].trim();
             
             if (line.startsWith('#EXTINF:')) {
-                // Estrai i metadati del canale
+                // Extract channel metadata
                 const metadata = line.substring(8).trim();
                 const tvgData = {};
                 
-                // Estrai attributi tvg
+                // Extract tvg attributes
                 const tvgMatches = metadata.match(/([a-zA-Z-]+)="([^"]+)"/g) || [];
                 tvgMatches.forEach(match => {
                     const [key, value] = match.split('=');
@@ -113,17 +113,17 @@ class PlaylistTransformer {
                     tvgData[cleanKey] = value.replace(/"/g, '');
                 });
 
-                // Estrai il gruppo
+                // Extract the group
                 const groupMatch = metadata.match(/group-title="([^"]+)"/);
-                const group = groupMatch ? groupMatch[1] : 'Altri canali';
+                const group = groupMatch ? groupMatch[1] : 'Other channels';
 
-                // Estrai il nome del canale e puliscilo
+                // Extract the channel name and clean it
                 const nameParts = metadata.split(',');
                 let name = nameParts[nameParts.length - 1].trim();
 
-                // Controlla se ci sono opzioni VLC nelle righe successive
+                // Check if there are VLC options in the next lines
                 const { headers, nextIndex } = this.parseVLCOpts(lines, i + 1);
-                i = nextIndex - 1; // Aggiorna l'indice del ciclo
+                i = nextIndex - 1; // Update the cycle index
 
                 currentChannel = {
                     name,
@@ -148,27 +148,27 @@ class PlaylistTransformer {
             epgUrl
         };
 
-        console.log(`[PlaylistTransformer] ✓ Canali processati: ${result.channels.length}`);
-        console.log(`[PlaylistTransformer] ✓ Generi trovati: ${result.genres.length}`);
-        console.log('=== Fine Parsing Playlist M3U ===\n');
+        console.log(`[PlaylistTransformer] ✓ Channels processed: ${result.channels.length}`);
+        console.log(`[PlaylistTransformer] ✓ Genres found: ${result.genres.length}`);
+        console.log('=== Finished Parsing Playlist M3U ===\n');
 
         return result;
     }
 
     /**
-     * Carica e trasforma una playlist da URL
+     * Load and transform a playlist from URL
      */
     async loadAndTransform(url) {
         try {
-            console.log(`\nCaricamento playlist da: ${url}`);
+            console.log(`\nLoading playlist from: ${url}`);
             const playlistUrls = await readExternalFile(url);
             const allChannels = [];
             const allGenres = new Set();
-            const allEpgUrls = []; // Array per memorizzare tutti gli URL EPG
+            const allEpgUrls = []; // Array to store all EPG URLs
 
             for (const playlistUrl of playlistUrls) {
                 const response = await axios.get(playlistUrl);
-                console.log('✓ Playlist scaricata con successo:', playlistUrl);
+                console.log('✓ Playlist downloaded successfully:', playlistUrl);
                 
                 const result = this.parseM3U(response.data);
                 result.channels.forEach(channel => {
@@ -178,14 +178,14 @@ class PlaylistTransformer {
                 });
                 result.genres.forEach(genre => allGenres.add(genre));
                 
-                // Aggiungi l'URL EPG solo se non è già presente
+                // Only add the EPG URL if it isn't already there
                 if (result.epgUrl && !allEpgUrls.includes(result.epgUrl)) {
                     allEpgUrls.push(result.epgUrl);
-                    console.log('EPG URL trovato:', result.epgUrl);
+                    console.log('EPG URL found:', result.epgUrl);
                 }
             }
 
-            // Unisci tutti gli URL EPG trovati
+            // Merge all found EPG URLs
             const combinedEpgUrl = allEpgUrls.length > 0 ? allEpgUrls.join(',') : null;
 
             return {
@@ -194,29 +194,29 @@ class PlaylistTransformer {
                 epgUrl: combinedEpgUrl
             };
         } catch (error) {
-            console.error('Errore nel caricamento della playlist:', error);
+            console.error('Error loading playlist:', error);
             throw error;
         }
     }
 }
 
-// Funzione per leggere un file esterno (playlist o EPG)
+// Function to read an external file (playlist or EPG)
 async function readExternalFile(url) {
     try {
         const response = await axios.get(url);
         const content = response.data;
 
-        // Verifica se il contenuto inizia con #EXTM3U (indicatore di una playlist M3U diretta)
+        // Check if content starts with #EXTM3U (indicator of a direct M3U playlist)
         if (content.trim().startsWith('#EXTM3U')) {
-            console.log('Rilevata playlist M3U diretta');
-            return [url]; // Restituisce un array con solo l'URL diretto
+            console.log('Direct M3U playlist detected');
+            return [url]; // Returns an array with just the direct URL
         }
 
-        // Altrimenti tratta il contenuto come una lista di URL
-        console.log('Rilevato file con lista di URL');
+        // Otherwise treat the content as a list of URLs
+        console.log('File with URL list detected');
         return content.split('\n').filter(line => line.trim() !== '');
     } catch (error) {
-        console.error('Errore nel leggere il file esterno:', error);
+        console.error('Error reading external file:', error);
         throw error;
     }
 }
