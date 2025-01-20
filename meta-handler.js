@@ -3,7 +3,7 @@ const CacheManager = require('./cache-manager')(config);
 const EPGManager = require('./epg-manager');
 
 /**
- * Arricchisce i metadati del canale con informazioni EPG dettagliate
+ * Enrichs channel metadata with detailed EPG information
  */
 function enrichWithDetailedEPG(meta, channelId) {
     if (!config.enableEPG) return meta;
@@ -12,11 +12,11 @@ function enrichWithDetailedEPG(meta, channelId) {
     const upcomingPrograms = EPGManager.getUpcomingPrograms(channelId);
 
     if (currentProgram) {
-        // Crea la descrizione base
+        // Create the basic description
         let description = [];
         
-        // Programma corrente
-        description.push('📺 IN ONDA ORA:', currentProgram.title);
+        // Current program
+        description.push('📺 ON AIR NOW:', currentProgram.title);
         
         if (currentProgram.description) {
             description.push('', currentProgram.description);
@@ -28,9 +28,9 @@ function enrichWithDetailedEPG(meta, channelId) {
             description.push(`🏷️ ${currentProgram.category}`);
         }
 
-        // Prossimi programmi
+        // Upcoming programs
         if (upcomingPrograms?.length > 0) {
-            description.push('', '📅 PROSSIMI PROGRAMMI:');
+            description.push('', '📅 UPCOMING PROGRAMS:');
             upcomingPrograms.forEach(program => {
                 description.push(
                     '',
@@ -45,10 +45,10 @@ function enrichWithDetailedEPG(meta, channelId) {
             });
         }
 
-        // Unisci tutto con la descrizione originale
+        // Merge everything with the original description
         meta.description = description.join('\n');
         
-        // Aggiorna releaseInfo
+        // Update releaseInfo
         meta.releaseInfo = `${currentProgram.title} (${currentProgram.start})`;
     }
 
@@ -56,7 +56,7 @@ function enrichWithDetailedEPG(meta, channelId) {
 }
 
 /**
- * Handler per i metadati dettagliati di un canale
+ * Handler for detailed metadata of a channel
  */
 async function metaHandler({ type, id }) {
     try {
@@ -77,7 +77,7 @@ async function metaHandler({ type, id }) {
             return { meta: null };
         }
 
-        // Prepara le informazioni base del canale
+        // Prepare basic channel information
         const meta = {
             id: channel.id,
             type: 'tv',
@@ -91,8 +91,8 @@ async function metaHandler({ type, id }) {
             releaseInfo: 'LIVE',
             genre: channel.genre,
             posterShape: 'square',
-            language: 'ita',
-            country: 'ITA',
+            language: 'eng',
+            country: 'USA',
             isFree: true,
             behaviorHints: {
                 isLive: true,
@@ -100,11 +100,11 @@ async function metaHandler({ type, id }) {
             }
         };
 
-        // Prepara la descrizione base
+        // Prepare the basic description
         let baseDescription = [];
         
         if (channel.streamInfo?.tvg?.chno) {
-            baseDescription.push(`📺 Canale ${channel.streamInfo.tvg.chno}`);
+            baseDescription.push(`📺 Channel ${channel.streamInfo.tvg.chno}`);
         }
 
         if (channel.description) {
@@ -113,12 +113,12 @@ async function metaHandler({ type, id }) {
 
         meta.description = baseDescription.join('\n');
 
-        // Arricchisci con informazioni EPG
+        // Enrich with EPG information
         const enrichedMeta = enrichWithDetailedEPG(meta, channel.streamInfo?.tvg?.id);
 
         return { meta: enrichedMeta };
     } catch (error) {
-        console.error('[MetaHandler] Errore:', error.message);
+        console.error('[MetaHandler] Error:', error.message);
         return { meta: null };
     }
 }
