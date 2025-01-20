@@ -39,7 +39,7 @@ const baseConfig = {
         version: '1.0.0',
         name: 'FluxusTV',
         description: 'An addon for FluxusTV M3U channel playlist.',
-        logo: 'https://github.com/mccoy88f/OMG-TV-Stremio-Addon/blob/main/tv.png?raw=true',
+        logo: 'https://github.com/kadeschs/FluxusTV/blob/main/tv.png?raw=true',
         resources: ['stream', 'catalog', 'meta'],
         types: ['tv'],
         idPrefixes: ['tv'],
@@ -47,7 +47,7 @@ const baseConfig = {
             {
                 type: 'tv',
                 id: 'omg_tv',
-                name: 'OMG TV',
+                name: 'OMG TV', // May want to change this to FluxusTV
                 extra: [
                     {
                         name: 'genre',
@@ -68,21 +68,21 @@ const baseConfig = {
     }
 };
 
-// Funzione per caricare la configurazione personalizzata
+// Function to load customized configuration
 function loadCustomConfig() {
     const configOverridePath = path.join(__dirname, 'addon-config.json');
     
     try {
-        // Verifica se il file addon-config.json esiste
+        // Check if the addon-config.json file exists
         const addonConfigExists = fs.existsSync(configOverridePath);
 
-        // Se addon-config.json esiste, abilita le variabili d'ambiente per M3U e EPG
+        // If addon-config.json exists, enable environment variables for M3U and EPG
         if (addonConfigExists) {
             baseConfig.M3U_URL = process.env.M3U_URL || baseConfig.M3U_URL;
             baseConfig.EPG_URL = process.env.EPG_URL || baseConfig.EPG_URL;
         }
 
-        // Carica il file di configurazione personalizzata se esiste
+        // Load the custom configuration file if it exists
         if (addonConfigExists) {
             const customConfig = JSON.parse(fs.readFileSync(configOverridePath, 'utf8'));
             
@@ -106,7 +106,7 @@ function loadCustomConfig() {
             return mergedConfig;
         }
     } catch (error) {
-        console.error('Errore nel caricare la configurazione personalizzata:', error);
+        console.error('Error loading custom configuration:', error);
     }
 
     return baseConfig;
@@ -114,9 +114,9 @@ function loadCustomConfig() {
 
 const config = loadCustomConfig();
 
-// Funzione per aggiornare l'URL dell'EPG
+// Function to update the EPG URL
 config.updateEPGUrl = function(url) {
-    if (!this.EPG_URL && url) {  // Aggiorna solo se non è già impostato tramite variabili d'ambiente
+    if (!this.EPG_URL && url) {  // Update only if not already set via environment variables
         this.EPG_URL = url;
     }
 };
