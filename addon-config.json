@@ -1,7 +1,7 @@
 {
     "addonName": "FluxusTV",
     "addonId": "org.kadeschs.fluxustv",
-    "addonDescription": "An add-on for Stremio for FluxusTV M3U channel playlist.",
+    "addonDescription": "A Stremio addon for FluxusTV.",
     "addonVersion": "1.0.0",
     "addonLogo": "https://raw.githubusercontent.com/kadeschs/FluxusTV/refs/heads/main/tv.png"
 }
