@@ -38,7 +38,7 @@ const baseConfig = {
         id: 'org.kadeschs.fluxustv',
         version: '1.0.0',
         name: 'FluxusTV',
-        description: 'An add-on for Stremio with M3U channel playlist.',
+        description: 'An addon for FluxusTV M3U channel playlist.',
         logo: 'https://github.com/mccoy88f/OMG-TV-Stremio-Addon/blob/main/tv.png?raw=true',
         resources: ['stream', 'catalog', 'meta'],
         types: ['tv'],
