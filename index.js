@@ -7,17 +7,17 @@ const config = require('./config');
 
 async function generateConfig() {
     try {
-        console.log('\n=== Generazione Configurazione Iniziale ===');
+        console.log('\n=== Initial Configuration Generation ===');
         
-        // Crea un'istanza del transformer
+        // Create an instance of the transformer
         const transformer = new PlaylistTransformer();
         
-        // Carica e trasforma la playlist usando l'URL dalla configurazione
+        // Load and transform the playlist using the URL from the configuration
         const data = await transformer.loadAndTransform(config.M3U_URL);
-        console.log(`Trovati ${data.genres.length} generi`);
-        console.log('EPG URL configurato:', config.EPG_URL);
+        console.log(`Found ${data.genres.length} genres`);
+        console.log('EPG Configured URL:', config.EPG_URL);
 
-        // Crea la configurazione finale
+        // Create the final configuration
         const finalConfig = {
             ...config,
             manifest: {
@@ -45,25 +45,25 @@ async function generateConfig() {
             }
         };
 
-        console.log('Configurazione generata con i seguenti generi:');
+        console.log('Configuration generated with the following genres:');
         console.log(data.genres.join(', '));
         if (config.enableEPG) {
-            console.log('EPG abilitata, URL:', config.EPG_URL);
+            console.log('EPG enabled, URL:', config.EPG_URL);
         } else {
-            console.log('EPG disabilitata');
+            console.log('EPG disabled');
         }
-        console.log('\n=== Fine Generazione Configurazione ===\n');
+        console.log('\n=== End of Configuration Generation ===\n');
 
         return finalConfig;
     } catch (error) {
-        console.error('Errore durante la generazione della configurazione:', error);
+        console.error('Error generating configuration:', error);
         throw error;
     }
 }
 
 async function startAddon() {
     try {
-        // Genera la configurazione dinamicamente
+        // Generate the configuration dynamically
         const generatedConfig = await generateConfig();
 
         // Create the addon
@@ -82,7 +82,7 @@ async function startAddon() {
             console.error('Error updating cache on startup:', error);
         });
 
-        // Personalizza la pagina HTML
+        // Customize the HTML page
         const landingTemplate = landing => `
 <!DOCTYPE html>
 <html style="background: #000">
@@ -135,7 +135,7 @@ async function startAddon() {
         function copyManifestLink() {
             const manifestUrl = window.location.href + 'manifest.json';
             navigator.clipboard.writeText(manifestUrl).then(() => {
-                alert('Link del manifest copiato negli appunti!');
+                alert('Manifest link copied to clipboard!');
             });
         }
     </script>
@@ -145,7 +145,7 @@ async function startAddon() {
     <h1 style="color: white">${landing.name}</h1>
     <h2 style="color: white">${landing.description}</h2>
     <button onclick="window.location = 'stremio://${landing.transportUrl}/manifest.json'">
-        Aggiungi a Stremio
+        Add to Stremio
     </button>
 </body>
 </html>`;
@@ -154,20 +154,20 @@ async function startAddon() {
         const addonInterface = builder.getInterface();
         const serveHTTP = require('stremio-addon-sdk/src/serveHTTP');
 
-        // Avvia prima il server
+        // Start the server first
         await serveHTTP(addonInterface, { 
             port: generatedConfig.port, 
             landingTemplate 
         });
         
-        console.log('Addon attivo su:', `http://localhost:${generatedConfig.port}`);
-        console.log('Aggiungi il seguente URL a Stremio:', `http://localhost:${generatedConfig.port}/manifest.json`);
+        console.log('Addon active on:', `http://localhost:${generatedConfig.port}`);
+        console.log('Add the following URL to Stremio:', `http://localhost:${generatedConfig.port}/manifest.json`);
 
-        // Inizializza l'EPG dopo l'avvio del server se è abilitata
+        // Initialize EPG after server startup if enabled
         if (generatedConfig.enableEPG) {
             await EPGManager.initializeEPG(generatedConfig.EPG_URL);
         } else {
-            console.log('EPG disabilitata, skip inizializzazione');
+            console.log('EPG disabled, skip initialization');
         }
 
     } catch (error) {
