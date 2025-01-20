@@ -3,7 +3,7 @@ services:
     name: FluxusTV
     runtime: docker  
     plan: free 
-    region: USA
+    region: Ohio
     envVars:
       - key: ENABLE_EPG
         sync: false
