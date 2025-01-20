@@ -4,18 +4,18 @@ const zlib = require('zlib');
 const { promisify } = require('util');
 const gunzip = promisify(zlib.gunzip);
 
-// Funzione per leggere un file esterno (playlist o EPG)
+// Function to read an external file (playlist or EPG)
 async function readExternalFile(url) {
     try {
         const response = await axios.get(url);
         return response.data.split('\n').filter(line => line.trim() !== '');
     } catch (error) {
-        console.error('Errore nel leggere il file esterno:', error);
+        console.error('Error reading external file:', error);
         throw error;
     }
 }
 
-// Funzione per estrarre l'URL EPG dalla playlist M3U
+// Function to extract EPG URL from M3U playlist
 function extractEPGUrl(m3uContent) {
     const firstLine = m3uContent.split('\n')[0];
     if (firstLine.includes('url-tvg=')) {
@@ -25,7 +25,7 @@ function extractEPGUrl(m3uContent) {
     return null;
 }
 
-// Funzione per parsare una playlist M3U
+// Function to parse an M3U playlist
 async function parsePlaylist(url) {
     try {
         const playlistUrls = await readExternalFile(url);
@@ -37,26 +37,26 @@ async function parsePlaylist(url) {
             const m3uResponse = await axios.get(playlistUrl);
             const m3uContent = m3uResponse.data;
 
-            // Estrai l'URL dell'EPG dalla prima playlist
+            // Extract the EPG URL from the first playlist
             if (!epgUrl) {
                 epgUrl = extractEPGUrl(m3uContent);
             }
 
-            // Estrai i gruppi unici (generi)
+            // Extract unique groups (genres)
             const groups = new Set();
             const items = [];
 
-            // Dividi la playlist in righe
+            // Divide the playlist into rows
             const lines = m3uContent.split('\n');
             let currentItem = null;
 
             for (const line of lines) {
                 if (line.startsWith('#EXTINF:')) {
-                    // Estrai i metadati del canale
+                    // Extract channel metadata
                     const metadata = line.substring(8).trim();
                     const tvgData = {};
                     
-                    // Estrai attributi tvg
+                    // Extract tvg attributes
                     const tvgMatches = metadata.match(/([a-zA-Z-]+)="([^"]+)"/g) || [];
                     tvgMatches.forEach(match => {
                         const [key, value] = match.split('=');
@@ -64,19 +64,19 @@ async function parsePlaylist(url) {
                         tvgData[cleanKey] = value.replace(/"/g, '');
                     });
 
-                    // Estrai il gruppo
+                    // Extract the group
                     const groupMatch = metadata.match(/group-title="([^"]+)"/);
-                    const group = groupMatch ? groupMatch[1] : 'Altri';
+                    const group = groupMatch ? groupMatch[1] : 'Others';
                     groups.add(group);
 
-                    // Estrai il nome del canale (ultima parte dopo la virgola)
+                    // Extract the channel name (last part after the comma)
                     const nameParts = metadata.split(',');
                     const name = nameParts[nameParts.length - 1].trim();
 
-                    // Crea l'oggetto canale
+                    // Create the channel object
                     currentItem = {
                         name: name,
-                        url: '', // Sarà impostato nella prossima riga
+                        url: '', // It will be set in the next line
                         tvg: {
                             id: tvgData.id || null,
                             name: tvgData.name || name,
@@ -89,7 +89,7 @@ async function parsePlaylist(url) {
                         }
                     };
                 } else if (line.trim().startsWith('http')) {
-                    // Imposta l'URL del canale
+                    // Set the channel URL
                     if (currentItem) {
                         currentItem.url = line.trim();
                         items.push(currentItem);
@@ -98,7 +98,7 @@ async function parsePlaylist(url) {
                 }
             }
 
-            // Unisci i gruppi e gli elementi
+            // Merge groups and items
             items.forEach(item => {
                 if (!allItems.some(existingItem => existingItem.tvg.id === item.tvg.id)) {
                     allItems.push(item);
@@ -108,8 +108,8 @@ async function parsePlaylist(url) {
         }
 
         const uniqueGroups = Array.from(allGroups).sort();
-        console.log('Gruppi unici trovati nel parser:', uniqueGroups);
-        console.log('Playlist M3U caricate correttamente. Numero di canali:', allItems.length);
+        console.log('Unique groups found in the parser:', uniqueGroups);
+        console.log('M3U playlists loaded successfully. Number of channels:', allItems.length);
         
         return { 
             items: allItems, 
@@ -120,19 +120,19 @@ async function parsePlaylist(url) {
             epgUrl
         };
     } catch (error) {
-        console.error('Errore nel parsing della playlist:', error);
+        console.error('Error parsing playlist:', error);
         throw error;
     }
 }
 
-// Funzione per parsare l'EPG
+// Function to parse the EPG
 async function parseEPG(url) {
     try {
         const epgUrls = await readExternalFile(url);
         const allProgrammes = new Map();
 
         for (const epgUrl of epgUrls) {
-            console.log('Scaricamento EPG da:', epgUrl);
+            console.log('Download EPG from:', epgUrl);
             const response = await axios.get(epgUrl, { responseType: 'arraybuffer' });
             const decompressed = await gunzip(response.data);
             const xmlData = await parseStringPromise(decompressed.toString());
@@ -147,12 +147,12 @@ async function parseEPG(url) {
 
         return allProgrammes;
     } catch (error) {
-        console.error('Errore nel parsing dell\'EPG:', error);
+        console.error('EPG parsing error:', error);
         throw error;
     }
 }
 
-// Funzione per processare i dati EPG
+// Function for processing EPG data
 function processEPGData(data) {
     const programmes = new Map();
 
@@ -178,7 +178,7 @@ function processEPGData(data) {
     return programmes;
 }
 
-// Funzione per ottenere le informazioni del canale dall'EPG
+// Function to get channel information from EPG
 function getChannelInfo(epgData, channelName) {
     if (!epgData || !channelName) {
         return {
@@ -195,14 +195,14 @@ function getChannelInfo(epgData, channelName) {
         };
     }
 
-    // Trova il programma corrente
+    // Find the current program
     const now = new Date();
     const currentProgram = channel.find(program => 
         program.start <= now && program.stop >= now
     );
 
     return {
-        icon: null, // L'EPG Italia non fornisce icone
+        icon: null, // The EPG does not provide icons
         description: currentProgram ? 
             `${currentProgram.title}\n${currentProgram.description || ''}` : 
             null
