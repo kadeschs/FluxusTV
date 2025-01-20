@@ -74,7 +74,7 @@ PER LA VERSIONE BASE CON CANALI ITALIANI visita questa repository: https://githu
 2. Configura le variabili d'ambiente opzionali e procedi al deploy oppure
 3. Deploy automatico tramite questo pulsante (è necessario avere account anche gratuito su render.com) - Selezionare la branch su plus per attivare la versione plus
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/mccoy88f/OMG-Plus-TV-Stremio-Addon)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/kadeschs/FluxusTV)
 
 ## 🔄 Changelog
 
