@@ -1,4 +1,4 @@
-# FluxusTV- Stremio Addon
+# FluxusTV - Stremio Addon
 
 ## 📦 Installation
 
