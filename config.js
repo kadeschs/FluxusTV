@@ -98,7 +98,7 @@ function loadCustomConfig() {
                     catalogs: [{
                         ...baseConfig.manifest.catalogs[0],
                         id: addonConfigExists ? 'omg_plus_tv' : baseConfig.manifest.catalogs[0].id,
-                        name: addonConfigExists ? 'OMG+ TV' : baseConfig.manifest.catalogs[0].name
+                        name: addonConfigExists ? 'Fluxus TV' : baseConfig.manifest.catalogs[0].name
                     }]
                 }
             };
