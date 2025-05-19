@@ -38,7 +38,7 @@ const baseConfig = {
         id: 'org.kadeschs.fluxustv',
         version: '1.0.0',
         name: 'FluxusTV',
-        description: 'An Stremio addon for FluxusTV.',
+        description: 'A Stremio addon for FluxusTV.',
         logo: 'https://github.com/kadeschs/FluxusTV/blob/main/tv.png?raw=true',
         resources: ['stream', 'catalog', 'meta'],
         types: ['tv'],
@@ -97,7 +97,7 @@ function loadCustomConfig() {
                     logo: customConfig.addonLogo || baseConfig.manifest.logo,
                     catalogs: [{
                         ...baseConfig.manifest.catalogs[0],
-                        id: addonConfigExists ? 'omg_plus_tv' : baseConfig.manifest.catalogs[0].id,
+                        id: addonConfigExists ? 'fluxus_tv' : baseConfig.manifest.catalogs[0].id,
                         name: addonConfigExists ? 'Fluxus TV' : baseConfig.manifest.catalogs[0].name
                     }]
                 }
