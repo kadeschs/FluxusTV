@@ -19,31 +19,49 @@ class CacheManager extends EventEmitter {
             return;
         }
 
-        try {
-            this.cache.updateInProgress = true;
-            console.log('\n=== Start Cache Update ===');
+        this.cache.updateInProgress = true;
+        console.log('\n=== Start Cache Update ===');
 
-            const needsUpdate = force || !this.cache.lastUpdated || 
+        try {
+            const needsUpdate =
+                force ||
+                !this.cache.lastUpdated ||
                 (Date.now() - this.cache.lastUpdated) > this.config.cacheSettings.updateInterval;
 
             if (!needsUpdate) {
                 console.log('ℹ️  Cache still valid, skip update.');
+                this.cache.updateInProgress = false;
                 return;
             }
 
-            // Load and transform the playlist
             console.log('Loading playlist from:', this.config.M3U_URL);
-            const stremioData = await this.transformer.loadAndTransform(this.config.M3U_URL);
-            
-            // Refresh the cache
+
+            let stremioData = null;
+
+            try {
+                // SAFE: load playlist with full error handling
+                stremioData = await this.transformer.loadAndTransform(this.config.M3U_URL);
+            } catch (err) {
+                console.error('❌ Playlist fetch failed:', err.message);
+
+                // SAFE FALLBACK: empty dataset instead of crashing
+                stremioData = {
+                    channels: [],
+                    genres: []
+                };
+            }
+
+            // Update cache safely
             this.cache = {
                 stremioData,
                 lastUpdated: Date.now(),
                 updateInProgress: false
             };
 
-            // Update the genres in the manifest
-            this.config.manifest.catalogs[0].extra[0].options = stremioData.genres;
+            // Update manifest genres safely
+            if (this.config.manifest?.catalogs?.[0]?.extra?.[0]) {
+                this.config.manifest.catalogs[0].extra[0].options = stremioData.genres;
+            }
 
             console.log('\nCache Summary:');
             console.log(`✓ Cached channels: ${stremioData.channels.length}`);
@@ -54,16 +72,24 @@ class CacheManager extends EventEmitter {
             this.emit('cacheUpdated', this.cache);
 
         } catch (error) {
-            console.error('\n❌ ERROR in\'cache update:', error);
+            console.error('\n❌ ERROR in cache update:', error.message);
+
+            // NEVER crash the app
             this.cache.updateInProgress = false;
+
+            // Emit error but DO NOT throw
             this.emit('cacheError', error);
-            throw error;
+
+        } finally {
+            this.cache.updateInProgress = false;
         }
     }
 
     getCachedData() {
-        if (!this.cache.stremioData) return { channels: [], genres: [] };
-        
+        if (!this.cache.stremioData) {
+            return { channels: [], genres: [] };
+        }
+
         return {
             channels: this.cache.stremioData.channels,
             genres: this.cache.stremioData.genres
@@ -72,17 +98,15 @@ class CacheManager extends EventEmitter {
 
     getChannel(channelId) {
         console.log('[CacheManager] Channel search with ID:', channelId);
+
         const channel = this.cache.stremioData?.channels.find(ch => {
             const match = ch.id === `tv|${channelId}`;
-            if (match) {
-                console.log('[CacheManager] Match found by channel:', ch.name);
-            }
+            if (match) console.log('[CacheManager] Match found by channel:', ch.name);
             return match;
         });
 
         if (!channel) {
             console.log('[CacheManager] No channels found for ID:', channelId);
-            // Try searching by name if searching by ID fails
             return this.cache.stremioData?.channels.find(ch => ch.name === channelId);
         }
 
@@ -99,7 +123,7 @@ class CacheManager extends EventEmitter {
     searchChannels(query) {
         if (!query) return this.cache.stremioData?.channels || [];
         const searchLower = query.toLowerCase();
-        return this.cache.stremioData?.channels.filter(channel => 
+        return this.cache.stremioData?.channels.filter(channel =>
             channel.name.toLowerCase().includes(searchLower)
         ) || [];
     }
